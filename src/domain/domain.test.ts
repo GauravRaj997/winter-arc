@@ -2,13 +2,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createRepo, type KV } from '../data/repo.ts';
-import { completion, dailyPlan, dayNumber, phaseFor } from './plan.ts';
+import { completion, dailyPlan, dayMark, dayNumber, phaseFor, pillarCompletion } from './plan.ts';
 import { DEFAULT_PROFILE, sleepMinutes, validateProfile, type UserProfile } from './profile.ts';
 import { suggestProgression } from './progression.ts';
 import { generateSchedule } from './schedule.ts';
-import { addSet, createSession, finishSession, removeLastSet, sessionProgress, statusCue, updateSet } from './session.ts';
+import { addSet, createSession, finishSession, removeLastSet, nextOpenSet, sessionProgress, statusCue, updateSet } from './session.ts';
 import { addDays, isValidDateKey, weekdayOf } from './time.ts';
-import { EXERCISES, exercisesFor } from './workouts.ts';
+import { estimateMinutes, EXERCISES, exercisesFor } from './workouts.ts';
 
 const profile: UserProfile = { ...DEFAULT_PROFILE, startDate: '2026-10-05', startWeightKg: 62 }; // a Monday
 
@@ -75,6 +75,13 @@ test('completion counts only checkable tasks', () => {
   assert.equal(completion(dailyPlan(profile, '2026-10-05', true).tasks, []).total, 4);
 });
 
+test('pillars and 90-day map marks', () => {
+  const plan = dailyPlan(profile, '2026-10-05');
+  const p = pillarCompletion(plan.tasks, ['workout', 'breakfast', 'walk']);
+  assert.deepEqual([p.train.done, p.train.total, p.food.done, p.food.total, p.move.done, p.sleep.total], [1, 2, 1, 5, 1, 2]);
+  assert.deepEqual([undefined, 0, 0.3, 0.7, 1].map(dayMark), ['none', 'none', 'partial', 'full', 'full']);
+});
+
 test('set logging and completion', () => {
   let s = createSession('2026-10-05', 'push_legs', profile.equipment, { 'push-up': [{ setNumber: 1, reps: 12, loadKg: 2, completed: true }] });
   assert.equal(s.exercises[0].sets[2].reps, 12); // prefilled from last time
@@ -90,6 +97,10 @@ test('set logging and completion', () => {
   assert.equal(s.exercises[0].sets.length, 3);
   assert.deepEqual(sessionProgress(s), { done: 1, total: 18 });
   assert.equal(finishSession(s, 'completed').status, 'completed');
+  assert.deepEqual(nextOpenSet(s), { ex: 0, set: 1 });
+  const all = { ...s, exercises: s.exercises.map((e) => ({ ...e, sets: e.sets.map((x) => ({ ...x, completed: true })) })) };
+  assert.equal(nextOpenSet(all), undefined);
+  assert.equal(estimateMinutes(exercisesFor('push_legs', profile.equipment)), 38);
 });
 
 test('audio cues fire on start, resume and finish only', () => {
@@ -106,6 +117,7 @@ test('progression suggestions', () => {
   const pushUp = EXERCISES['push-up'];
   assert.equal(suggestProgression({ ...pushUp, repMax: 15 }, sets([12, 12, 11])).message, 'Keep load and attempt 13 / 12 / 12.');
   assert.equal(suggestProgression(pushUp, sets([12, 12, 11], 5)).message, 'Keep 5 kg and attempt 13 / 12 / 12.');
+  assert.deepEqual(suggestProgression(pushUp, sets([12, 12, 11])).targets, [13, 12, 12]);
   assert.equal(suggestProgression(pushUp, sets([15, 15, 15])).kind, 'load');
   assert.equal(suggestProgression(EXERCISES['pike-push-up'], sets([12, 12, 12])).kind, 'variation');
   assert.equal(suggestProgression(pushUp, undefined).kind, 'start');
@@ -137,6 +149,9 @@ test('persistence keeps previous performance across edits', async () => {
   assert.equal((await repo.getSession('2026-10-12'))!.exercises[0].sets[0].reps, 12);
 
   assert.deepEqual(await repo.getDayLog('2026-10-05'), { date: '2026-10-05', done: [], minimal: false });
+  await repo.saveDayScore('2026-10-05', 0.5);
+  await repo.saveDayScore('2026-10-06', 1);
+  assert.deepEqual(await repo.getDayScores(), { '2026-10-05': 0.5, '2026-10-06': 1 });
   await repo.clearAll();
   assert.equal(await repo.getProfile(), undefined);
 });

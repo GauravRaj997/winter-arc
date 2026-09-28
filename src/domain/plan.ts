@@ -49,3 +49,22 @@ export function completion(tasks: ScheduleItem[], done: string[]) {
   const n = list.filter((t) => done.includes(t.id)).length;
   return { done: n, total: list.length, ratio: list.length ? n / list.length : 0 };
 }
+
+export type Pillar = 'train' | 'food' | 'sleep' | 'move';
+export const PILLARS: Pillar[] = ['train', 'food', 'sleep', 'move'];
+
+/** Which of the four daily pillars a task counts toward; routine tasks count only toward the total. */
+export function pillarOf(t: ScheduleItem): Pillar | undefined {
+  if (t.kind === 'workout' || t.id === 'cooldown') return 'train';
+  if (t.kind === 'meal' || t.id === 'meal-prep') return 'food';
+  if (t.kind === 'sleep' || t.id === 'phone-down') return 'sleep';
+  if (t.kind === 'walk') return 'move';
+}
+
+export function pillarCompletion(tasks: ScheduleItem[], done: string[]) {
+  return Object.fromEntries(PILLARS.map((p) => [p, completion(tasks.filter((t) => pillarOf(t) === p), done)])) as Record<Pillar, ReturnType<typeof completion>>;
+}
+
+/** 90-day map cell. Partial days are shown softly, never as failures. */
+export const dayMark = (ratio: number | undefined): 'none' | 'partial' | 'full' =>
+  !ratio ? 'none' : ratio >= 0.7 ? 'full' : 'partial';

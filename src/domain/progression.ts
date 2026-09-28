@@ -1,7 +1,7 @@
 import type { SetLog } from './session.ts';
 import type { Exercise } from './workouts.ts';
 
-export type Suggestion = { kind: 'start' | 'reps' | 'load' | 'variation' | 'tempo' | 'hold'; message: string };
+export type Suggestion = { kind: 'start' | 'reps' | 'load' | 'variation' | 'tempo' | 'hold'; message: string; targets?: number[] };
 
 /**
  * Suggest the next target from last time's completed sets. Never applied
@@ -30,5 +30,5 @@ export function suggestProgression(e: Exercise, previous: SetLog[] | undefined):
   if (weakest !== 0) targets[weakest] += 1;
   const capped = targets.map((r) => Math.min(r, e.repMax));
   const load = done[0].loadKg > 0 ? `${done[0].loadKg} kg` : 'load';
-  return { kind: 'reps', message: `Keep ${load} and attempt ${capped.map((r) => `${r}${unit}`).join(' / ')}.` };
+  return { kind: 'reps', targets: capped, message: `Keep ${load} and attempt ${capped.map((r) => `${r}${unit}`).join(' / ')}.` };
 }

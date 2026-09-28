@@ -105,3 +105,7 @@ export function exercisesFor(workoutId: WorkoutId, equipment: Equipment[]): Exer
   }
   return out;
 }
+
+/** Rough session length: ~40 s of work per set plus the prescribed rest. */
+export const estimateMinutes = (exercises: Exercise[]) =>
+  Math.round(exercises.reduce((m, e) => m + e.sets * (40 + e.restSeconds), 0) / 60);

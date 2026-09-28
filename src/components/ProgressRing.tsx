@@ -3,8 +3,8 @@ import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { colors } from '../theme';
 
-export function ProgressRing({ ratio, size = 112, stroke = 10, color = colors.primary, label, children }: {
-  ratio: number; size?: number; stroke?: number; color?: string; label: string; children?: ReactNode;
+export function ProgressRing({ ratio, size = 112, stroke = 10, color = colors.primary, track = colors.surface2, label, children }: {
+  ratio: number; size?: number; stroke?: number; color?: string; track?: string; label: string; children?: ReactNode;
 }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -18,7 +18,7 @@ export function ProgressRing({ ratio, size = 112, stroke = 10, color = colors.pr
       style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}
     >
       <Svg width={size} height={size} style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
-        <Circle cx={size / 2} cy={size / 2} r={r} stroke={colors.surface2} strokeWidth={stroke} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={track} strokeWidth={stroke} fill="none" />
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={color} strokeWidth={stroke} fill="none"
           strokeDasharray={`${c} ${c}`} strokeDashoffset={c * (1 - clamped)} strokeLinecap="round" />
       </Svg>

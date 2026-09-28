@@ -81,4 +81,12 @@ export function statusCue(prev: WorkoutSession['status'], next: WorkoutSession['
   if (next === 'completed' && prev !== 'completed') return 'end';
 }
 
-export const hasLoggedSets =(s: WorkoutSession) => sessionProgress(s).done > 0;
+/** First set not yet logged, in workout order. */
+export function nextOpenSet(s: WorkoutSession): { ex: number; set: number } | undefined {
+  for (let ex = 0; ex < s.exercises.length; ex++) {
+    const set = s.exercises[ex].sets.findIndex((x) => !x.completed);
+    if (set >= 0) return { ex, set };
+  }
+}
+
+export const hasLoggedSets = (s: WorkoutSession) => sessionProgress(s).done > 0;

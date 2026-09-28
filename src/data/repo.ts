@@ -27,6 +27,14 @@ export function createRepo(kv: KV) {
     getDayLog: async (date: string): Promise<DayLog> => (await get<DayLog>(`day:${date}`)) ?? { date, done: [], minimal: false },
     saveDayLog: (log: DayLog) => set(`day:${log.date}`, log),
 
+    /** Daily completion ratio per date, kept as one small index so the 90-day map is a single read. */
+    getDayScores: async () => (await get<Record<string, number>>('scores')) ?? {},
+    async saveDayScore(date: string, ratio: number) {
+      const scores = (await get<Record<string, number>>('scores')) ?? {};
+      if (scores[date] === ratio) return;
+      await set('scores', { ...scores, [date]: ratio });
+    },
+
     getSession: (date: string) => get<WorkoutSession>(`session:${date}`),
     async saveSession(s: WorkoutSession) {
       await set(`session:${s.date}`, s);
