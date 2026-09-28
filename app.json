@@ -16,7 +16,14 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.roop.winterarc",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -26,6 +33,12 @@
       "expo-audio"
     ],
     "scheme": "winterarc",
-    "backgroundColor": "#080B12"
+    "backgroundColor": "#080B12",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "70b5c536-c302-4fa3-9057-8464aa95ed3e"
+      }
+    }
   }
 }
