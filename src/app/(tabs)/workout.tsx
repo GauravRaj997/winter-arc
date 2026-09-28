@@ -4,10 +4,12 @@ import { ExerciseCard } from '../../components/ExerciseCard';
 import { RestTimer } from '../../components/RestTimer';
 import { Banner, Button, Card, Chip, Row, Screen, Txt } from '../../components/ui';
 import { dailyPlan } from '../../domain/plan';
-import { addSet, finishSession, hasLoggedSets, removeLastSet, reopenSession, sessionProgress, updateSet } from '../../domain/session';
+import { beepCount } from '../../domain/profile';
+import { addSet, finishSession, hasLoggedSets, removeLastSet, reopenSession, sessionProgress, statusCue, updateSet, type WorkoutSession } from '../../domain/session';
 import { formatDate } from '../../domain/time';
 import { EXERCISES, WORKOUTS, type WorkoutId } from '../../domain/workouts';
 import { useToday, useWorkout } from '../../state/hooks';
+import { beep } from '../../services/beeper';
 import { useProfile } from '../../state/profile';
 import { colors, radius, space } from '../../theme';
 
@@ -17,10 +19,17 @@ export default function Workout() {
   const { profile } = useProfile();
   const today = useToday();
   const planned = profile ? dailyPlan(profile, today).workoutId : 'rest';
-  const { session, previous, error, update, switchTo } = useWorkout(today, planned, profile?.equipment ?? ['bodyweight']);
+  const { session, previous, error, update: save, switchTo } = useWorkout(today, planned, profile?.equipment ?? ['bodyweight']);
   const [restEndsAt, setRestEndsAt] = useState<number | null>(null);
   const [safety, setSafety] = useState(false);
   const [notes, setNotes] = useState<string>();
+  const beeps = profile ? beepCount(profile) : 0;
+
+  /** Every session change goes through here so start/finish beep automatically. */
+  const update = (next: WorkoutSession) => {
+    if (session && statusCue(session.status, next.status)) beep(beeps);
+    save(next);
+  };
 
   if (!session) {
     return (
@@ -66,7 +75,7 @@ export default function Workout() {
   const saveNotes = () => notes !== undefined && notes !== (session.notes ?? '') && update({ ...session, notes });
 
   return (
-    <Screen footer={restEndsAt ? <RestTimer endsAt={restEndsAt} onChange={setRestEndsAt} /> : null}>
+    <Screen footer={restEndsAt ? <RestTimer endsAt={restEndsAt} onChange={setRestEndsAt} onDone={() => { beep(beeps); setRestEndsAt(null); }} /> : null}>
       {header}
       {error && <Banner tone="error"><Txt>{error}</Txt></Banner>}
 
@@ -77,6 +86,7 @@ export default function Workout() {
             {session.status === 'completed' ? '✓ Completed' : session.status === 'skipped' ? 'Skipped · resume whenever you are ready' : session.status === 'in_progress' ? 'In progress' : 'Not started — begin when you are ready'}
           </Txt>
         </View>
+        {session.status === 'planned' && <Button label="Start" icon="play" onPress={() => update({ ...session, status: 'in_progress' })} />}
         {finished && <Button label={session.status === 'skipped' ? 'Resume' : 'Edit'} variant="secondary" onPress={() => update(reopenSession(session))} />}
       </Card>
 

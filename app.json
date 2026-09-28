@@ -22,7 +22,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-audio"
     ],
     "scheme": "winterarc",
     "backgroundColor": "#080B12"

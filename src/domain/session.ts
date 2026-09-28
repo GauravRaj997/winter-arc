@@ -75,4 +75,10 @@ export function sessionProgress(s: WorkoutSession) {
   return { done: sets.filter((x) => x.completed).length, total: sets.length };
 }
 
-export const hasLoggedSets = (s: WorkoutSession) => sessionProgress(s).done > 0;
+/** Which audio cue a status change deserves: starting (or resuming) and finishing. Editing a finished session is silent. */
+export function statusCue(prev: WorkoutSession['status'], next: WorkoutSession['status']): 'start' | 'end' | undefined {
+  if (next === 'in_progress' && (prev === 'planned' || prev === 'skipped')) return 'start';
+  if (next === 'completed' && prev !== 'completed') return 'end';
+}
+
+export const hasLoggedSets =(s: WorkoutSession) => sessionProgress(s).done > 0;

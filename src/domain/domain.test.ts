@@ -6,7 +6,7 @@ import { completion, dailyPlan, dayNumber, phaseFor } from './plan.ts';
 import { DEFAULT_PROFILE, sleepMinutes, validateProfile, type UserProfile } from './profile.ts';
 import { suggestProgression } from './progression.ts';
 import { generateSchedule } from './schedule.ts';
-import { addSet, createSession, finishSession, removeLastSet, sessionProgress, updateSet } from './session.ts';
+import { addSet, createSession, finishSession, removeLastSet, sessionProgress, statusCue, updateSet } from './session.ts';
 import { addDays, isValidDateKey, weekdayOf } from './time.ts';
 import { EXERCISES, exercisesFor } from './workouts.ts';
 
@@ -90,6 +90,15 @@ test('set logging and completion', () => {
   assert.equal(s.exercises[0].sets.length, 3);
   assert.deepEqual(sessionProgress(s), { done: 1, total: 18 });
   assert.equal(finishSession(s, 'completed').status, 'completed');
+});
+
+test('audio cues fire on start, resume and finish only', () => {
+  assert.equal(statusCue('planned', 'in_progress'), 'start');
+  assert.equal(statusCue('skipped', 'in_progress'), 'start');
+  assert.equal(statusCue('in_progress', 'completed'), 'end');
+  assert.equal(statusCue('completed', 'in_progress'), undefined); // editing a finished session
+  assert.equal(statusCue('in_progress', 'in_progress'), undefined);
+  assert.equal(statusCue('in_progress', 'skipped'), undefined);
 });
 
 test('progression suggestions', () => {

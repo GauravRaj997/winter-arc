@@ -17,7 +17,11 @@ export type UserProfile = {
   leaveHomeTime: string;
   returnHomeTime: string;
   bedTime: string;
+  /** Beeps at workout start, rest end and finish. 0 = off. Optional for profiles saved before it existed. */
+  beeps?: number;
 };
+
+export const beepCount = (p: Pick<UserProfile, 'beeps'>) => p.beeps ?? 3;
 
 export const DEFAULT_PROFILE: Omit<UserProfile, 'startDate' | 'startWeightKg'> = {
   goal: 'muscle_gain',
@@ -29,6 +33,7 @@ export const DEFAULT_PROFILE: Omit<UserProfile, 'startDate' | 'startWeightKg'> =
   leaveHomeTime: '08:30',
   returnHomeTime: '20:30',
   bedTime: '22:30',
+  beeps: 3,
 };
 
 export const sleepMinutes = (p: Pick<UserProfile, 'bedTime' | 'wakeTime'>) =>

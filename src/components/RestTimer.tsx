@@ -4,7 +4,7 @@ import { colors, radius, space } from '../theme';
 import { Txt } from './ui';
 
 /** Countdown bar pinned above the tab bar. `endsAt` is an epoch ms timestamp. */
-export function RestTimer({ endsAt, onChange }: { endsAt: number; onChange: (endsAt: number | null) => void }) {
+export function RestTimer({ endsAt, onChange, onDone }: { endsAt: number; onChange: (endsAt: number | null) => void; onDone: () => void }) {
   const [now, setNow] = useState(Date.now());
   const left = Math.max(0, Math.ceil((endsAt - now) / 1000));
 
@@ -15,8 +15,10 @@ export function RestTimer({ endsAt, onChange }: { endsAt: number; onChange: (end
   useEffect(() => {
     if (left > 0) return;
     Vibration.vibrate(400);
-    onChange(null);
-  }, [left, onChange]);
+    onDone();
+    // Fire once when the countdown reaches zero, not on every parent render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [left]);
 
   return (
     <View style={s.bar} accessibilityLiveRegion="polite">

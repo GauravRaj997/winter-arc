@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { sleepMinutes, validateProfile, type Equipment, type ProfileErrors, type UserProfile } from '../domain/profile';
 import { isValidTime, WEEKDAY_SHORT } from '../domain/time';
+import { beep } from '../services/beeper';
 import { colors, space } from '../theme';
 import { Banner, Button, Card, Chip, Field, Row, Txt } from './ui';
 
@@ -68,6 +69,12 @@ export function ProfileForm({ initial, submitLabel, onSubmit }: {
           ))}
         </Row>
         {errors.equipment && <Txt variant="caption" color={colors.danger}>{errors.equipment}</Txt>}
+        <Txt variant="caption">Workout beeps · at start, when rest ends, and at finish</Txt>
+        <Row>
+          {[0, 3, 4, 5].map((n) => (
+            <Chip key={n} label={n ? `${n} beeps` : 'Off'} selected={(p.beeps ?? 3) === n} onPress={() => { set('beeps', n); beep(n); }} />
+          ))}
+        </Row>
       </Card>
 
       <Card>
